@@ -1,0 +1,2 @@
+#python-unicodecsv
+-e git+git://github.com/jdunck/python-unicodecsv.git#egg=python-unicodecsv
