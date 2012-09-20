@@ -1,8 +1,10 @@
 django_pgarray
 ##############
 
-Django array field support for postgres, using unicode csv to save it in others
-database and to show it in text widget
+Django array field support for postgres.
+
+Use unicode csv for text widget (nice play in django admin) and to save array
+in others database like a text field
 
 
 usage
@@ -29,4 +31,6 @@ default atributes
 TODO
 ====
 
-tests
+* clean lookups posibilites
+* manager for contain sql, with extra method of queryset
+* tests
