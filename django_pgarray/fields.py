@@ -48,7 +48,7 @@ class PgArrayField(models.Field):
             if not self._blank_item:
                 value = [v for v in value if v]
             if self._unique_item:
-                value = list(set(values))
+                value = list(set(value))
             to_python = self._fieldtype.to_python
             value = [to_python(v) for v in value]
             return value

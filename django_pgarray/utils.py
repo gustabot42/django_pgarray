@@ -16,6 +16,7 @@ def list_to_csv(value):
     return f.read()
 
 def csv_to_list(value):
+    value = value.encode('utf-8')
     f = StringIO(value)
     r = csv.reader(f, pgarray_dialect)
     values = []
