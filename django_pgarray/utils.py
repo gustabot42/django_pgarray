@@ -6,16 +6,20 @@ import unicodecsv as csv
 
 class pgarray_dialect(csv.csv.excel):
     skipinitialspace = True
-    lineterminator = ''
 
 
-def parselist(value):
+def list_to_csv(value):
     f = StringIO()
     w = csv.writer(f, pgarray_dialect)
     w.writerow(value)
     f.seek(0)
     return f.read()
 
-def parsestring(value):
+def csv_to_list(value):
     f = StringIO(value)
-    return csv.reader(f, pgarray_dialect).next()
+    r = csv.reader(f, pgarray_dialect)
+    values = []
+    for i in r:
+        values += i
+    
+    return values

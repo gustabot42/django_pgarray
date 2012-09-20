@@ -3,64 +3,32 @@
 from django import forms
 from django.utils.translation import ugettext_lazy as _
 
-import datetime
-from collections import defaultdict
+from utils import list_to_csv, csv_to_list, csv
 
-from utils import parselist, parsestring
 
-class PgArrayWidget(forms.TextInput):
+class PgArrayWidget(forms.Textarea):
     def render(self, name, value, attrs=None):
         if value is not None:
-            value = parselist(value)
+            value = list_to_csv(value)
         return super(PgArrayWidget, self).render(name, value, attrs)
 
+
 def PgArrayFormField(formfield):
-    class FieldArray(forms.CharField):
-        
+    class FieldArray(forms.CharField):  # Class inside a function, smell like hack
         widget = PgArrayWidget
         
         def to_python(self, value):
-            if not value:
-                return None
+            if value is None:
+                return value
             return [formfield.to_python(v) for v in value]
         
         def clean(self, value):
-            value = super(TagField, self).clean(value)
             try:
-                return parse_tags(value)
-            except ValueError:
-                raise forms.ValidationError(_("Please provide a comma-separated list of tags."))
-    
-    
-        
-
-
-class PgArrayFormField(forms):
-    #default_error_messages = {
-    #    'invalid':_('Enter a valid time span: e.g. "3 days, 4 hours, 2 minutes"')
-    #}
-    
-    def __init__(self, *args, **kwargs):
-        defaults = {'widget':TimedeltaWidget}
-        defaults.update(kwargs)
-        super(PgArrayFormField, self).__init__(*args, **defaults)
-        
-    def clean(self, value):
-        super(PgArrayFormField, self).clean(value)
-        if value == '' and not self.required:
-            return u''
-        
-        data = defaultdict(float)
-        try:
-            return parse(value)
-        except TypeError:
-            raise forms.ValidationError(self.error_messages['invalid'])
+                value = csv_to_list(value)
+            except csv.csv.Error:
+                e = _(u"Please provide a comma separated value list.")
+                raise forms.ValidationError(e)
             
-        return datetime.timedelta(**data)
-
-#class PgArrayChoicesField(TimedeltaFormField):
-#    def __init__(self, *args, **kwargs):
-#        choices = kwargs.pop('choices')
-#        defaults = {'widget':forms.Select(choices=choices)}
-#        defaults.update(kwargs)
-#        super(TimedeltaChoicesField, self).__init__(*args, **defaults)
+            return super(FieldArray, self).clean(value)
+    
+    return FieldArray
