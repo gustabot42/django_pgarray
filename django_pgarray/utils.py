@@ -23,4 +23,4 @@ def csv_to_list(value):
     for i in r:
         values += i
     
-    return values
+    return values if value else None

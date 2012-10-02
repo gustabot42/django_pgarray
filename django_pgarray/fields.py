@@ -27,10 +27,11 @@ class PgArrayField(models.Field):
         kwargs.setdefault('null', True)
         kwargs.setdefault('default', None)
         
-        self._blank_item = kwargs.pop('blank_item', False)
-        self._unique_item = kwargs.pop('unique_item', True)
+        field_kwargs = kwargs.copy()
+        field_kwargs['blank'] = kwargs.pop('blank_item', False)
+        field_kwargs['unique'] = kwargs.pop('unique_item', True)
         
-        self._fieldtype = fieldtype(*args, **kwargs)
+        self._fieldtype = fieldtype(*args, **field_kwargs)
         self._textfield = models.TextField(*args, **kwargs)
         super(PgArrayField, self).__init__(*args, **kwargs)
     
@@ -45,9 +46,9 @@ class PgArrayField(models.Field):
         if isinstance(value, basestring):
             value = csv_to_list(value)
         if isinstance(value, (list,tuple)):
-            if not self._blank_item:
+            if not self._fieldtype.blank:
                 value = [v for v in value if v]
-            if self._unique_item:
+            if self._fieldtype.unique:
                 value = list(set(value))
             to_python = self._fieldtype.to_python
             value = [to_python(v) for v in value]
@@ -57,8 +58,15 @@ class PgArrayField(models.Field):
         raise ValidationError(e)
     
     def get_prep_value(self, value):
+        if value is None:
+            return value
+        
         get_prep_value = self._fieldtype.get_prep_value
-        return [get_prep_value(v) for v in value]
+        
+        if isinstance(value, (list, tuple)):
+            return [get_prep_value(v) for v in value]
+        else:
+            return get_prep_value(value)
     
     def get_db_prep_value(self, value, connection, prepared=False):
         value = value if prepared else self.get_prep_value(value)
@@ -70,17 +78,29 @@ class PgArrayField(models.Field):
             return self._textfield.get_db_prep_value(value)
         
         get_db_prep_value = self._fieldtype.get_db_prep_value
-        return [get_db_prep_value(v, connection, True) for v in value]
+        
+        if isinstance(value, (list, tuple)):
+            return [get_db_prep_value(v, connection, True) for v in value]
+        else:
+            return get_db_prep_value(value)
     
     def get_prep_lookup(self, lookup_type, value):
         """
         Perform preliminary non-db specific lookup checks and conversions
         """
+        
         if value:
-            if hasattr(value[0], 'prepare'):
-                return [v.prepare() for v in values]
-            if hasattr(value[0], '_prepare'):
-                return [v._prepare() for v in values]
+            if isinstance(value, (list, tuple)):
+                if hasattr(value[0], 'prepare'):
+                    return [v.prepare() for v in values]
+                if hasattr(value[0], '_prepare'):
+                    return [v._prepare() for v in values]
+            else:
+                if hasattr(value, 'prepare'):
+                    return [v.prepare() for v in values]
+                if hasattr(value, '_prepare'):
+                    return [v._prepare() for v in values]
+                
         
         # TODO clean valid lookups
         #if lookup_type in (
@@ -103,11 +123,11 @@ class PgArrayField(models.Field):
         defaults.update(kwargs)
         return super(PgArrayField, self).formfield(*args, **defaults)
     
-    def value_to_string(self, obj):
-        value = self._get_val_from_obj(obj)
-        if isinstance(value, (list, tuple)):
-            value = list_to_csv(value)
-        return value
+    #def value_to_string(self, obj):
+    #    value = self._get_val_from_obj(obj)
+    #    if isinstance(value, (list, tuple)):
+    #        value = list_to_csv(value)
+    #    return value
 
 
 try:

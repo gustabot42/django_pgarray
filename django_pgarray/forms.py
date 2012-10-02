@@ -3,7 +3,7 @@
 from django import forms
 from django.utils.translation import ugettext_lazy as _
 
-from utils import list_to_csv, csv_to_list, csv
+from utils import csv_to_list, list_to_csv, csv
 
 
 class PgArrayWidget(forms.Textarea):
@@ -28,6 +28,7 @@ def PgArrayFormField(formfield):
             except csv.csv.Error:
                 e = _(u"Please provide a comma separated value list.")
                 raise forms.ValidationError(e)
+            
             
             return super(FieldArray, self).clean(value)
     
