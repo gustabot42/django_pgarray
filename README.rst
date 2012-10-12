@@ -3,7 +3,7 @@ django_pgarray
 
 Django array field support for postgres.
 
-Use unicode csv for text widget (nice play in django admin) and to save array
+Use unicode csv for text widget (play nice with django admin) and to save array
 in others database like a text field
 
 
