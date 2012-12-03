@@ -54,7 +54,7 @@ class PgArrayField(models.Field):
             value = [to_python(v) for v in value]
             return value
         
-        e = default_error_messages('invalid')
+        e = default_error_messages['invalid']
         raise ValidationError(e)
     
     def get_prep_value(self, value):
